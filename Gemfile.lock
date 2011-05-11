@@ -1,0 +1,17 @@
+PATH
+  remote: .
+  specs:
+    ym4r-anonymizer (0.0.1)
+      ym4r
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    ym4r (0.6.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (>= 1.0.0)
+  ym4r-anonymizer!

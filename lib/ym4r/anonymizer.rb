@@ -3,6 +3,8 @@ require 'ym4r'
 
 module Ym4r
   module Anonymizer
+
+    Version = "0.0.1"
   
     @config = {}
     
@@ -27,6 +29,14 @@ module Ym4r
     
     def self.config
       @config
+    end
+    
+    def self.verbos=(v)
+      @verbos = v
+    end
+    
+    def self.verbos?
+      !!@verbos
     end
     
     def self.included(klass)
@@ -59,7 +69,37 @@ module Ym4r
         proxy ? proxy[:password] : nil
       end
       
+      def google_api_keys
+        Ym4r::Anonymizer.config[:google_api_keys] || Array(Ym4r::GoogleMaps::API_KEY)
+      end
+      
+      def yahoo_app_ids
+        Ym4r::Anonymizer.config[:yahoo_app_ids] || Array(Ym4r::YahooMaps::APP_ID)
+      end
+      
+      # iterate next API key
+      def url_with_next_key(url)
+        case self.name
+          when "Ym4r::GoogleMaps::Geocoding"
+            @@google_api_key_index ||= 0
+            @@google_api_key_index = 0 if @@google_api_key_index >= google_api_keys.size
+            key = google_api_keys[@@google_api_key_index]
+            @@google_api_key_index += 1
+            url.sub(/&key=(.*)&output=/, "&key=#{key}&output=")
+          when "Ym4r::YahooMaps::BuildingBlock::Geocoding"
+            @@yahoo_app_id_index ||= 0
+            @@yahoo_app_id_index = 0 if @@yahoo_app_id_index >= yahoo_app_ids.size
+            key = yahoo_app_ids[@@yahoo_app_id_index]
+            @@yahoo_app_id_index += 1
+            url.sub(/appid=(.+)&/, "appid=#{key}&")
+          else
+            raise "unknown Geocoder #{self.name} for anonymizing ym4r"
+        end
+      end
+      
       def open(url)
+        url = url_with_next_key(url)
+        puts "[#{Time.now}] fetching #{url}#{' with proxy ' + proxy_connection_string if use_proxy?}" if Ym4r::Anonymizer.verbos?
         if use_proxy?
           opts = if proxy_use_auth?
             {:proxy_http_basic_authentication => [proxy_connection_string, proxy_username, proxy_password]}
@@ -77,4 +117,5 @@ end
 
 # include Anonymizer methods with Geocoders
 Ym4r::GoogleMaps::Geocoding.send :include, Ym4r::Anonymizer
+Ym4r::YahooMaps::BuildingBlock::Geocoding.send :include, Ym4r::Anonymizer
 
