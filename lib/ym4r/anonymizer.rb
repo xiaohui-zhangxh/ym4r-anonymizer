@@ -4,7 +4,7 @@ require 'ym4r'
 module Ym4r
   module Anonymizer
 
-    Version = "0.0.1"
+    Version = "0.0.2"
   
     @config = {}
     
@@ -54,7 +54,7 @@ module Ym4r
       end
       
       def proxy_use_auth?
-        !!(proxy_username && proxy_passwprd)
+        !!(proxy_username && proxy_password)
       end
       
       def proxy_connection_string
